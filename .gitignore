@@ -80,3 +80,5 @@ ENV/
 .Python
 build/
 *.pyc
+
+.ruff_cache
