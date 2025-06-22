@@ -1,4 +1,4 @@
-use numpy::{PyArray2, PyArrayMethods};
+use numpy::PyArray2;
 use pyo3::prelude::*;
 
 pub mod lap;

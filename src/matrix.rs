@@ -4,7 +4,9 @@ use pyo3::prelude::*;
 use sprs::CsMat;
 
 /// Convert a dense NumPy array to Vec<Vec<f64>>
-pub fn extract_dense_matrix<'py>(cost_matrix: &Bound<'py, PyArray2<f64>>) -> PyResult<Vec<Vec<f64>>> {
+pub fn extract_dense_matrix<'py>(
+    cost_matrix: &Bound<'py, PyArray2<f64>>,
+) -> PyResult<Vec<Vec<f64>>> {
     let matrix: Vec<Vec<f64>> = cost_matrix
         .readonly()
         .as_array()
@@ -16,15 +18,12 @@ pub fn extract_dense_matrix<'py>(cost_matrix: &Bound<'py, PyArray2<f64>>) -> PyR
 }
 
 /// Convert a scipy.sparse.csr_matrix to Vec<Vec<f64>>
-pub fn extract_sparse_matrix<'py>(cost_matrix: &Bound<'py, PyArray2<f64>>) -> PyResult<Vec<Vec<f64>>> {
+pub fn extract_sparse_matrix<'py>(cost_matrix: &Bound<'py, PyAny>) -> PyResult<Vec<Vec<f64>>> {
     let indptr: PyReadonlyArray1<usize> = cost_matrix.getattr("indptr")?.extract()?;
     let indices: PyReadonlyArray1<usize> = cost_matrix.getattr("indices")?.extract()?;
     let data: PyReadonlyArray1<f64> = cost_matrix.getattr("data")?.extract()?;
-    
-    
-    let shape: (usize, usize) = cost_matrix
-        .getattr("shape")?
-        .extract::<(usize, usize)>()?;
+
+    let shape: (usize, usize) = cost_matrix.getattr("shape")?.extract::<(usize, usize)>()?;
 
     let csr = CsMat::new(
         shape,
