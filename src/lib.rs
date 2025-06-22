@@ -18,8 +18,9 @@ fn solve_lap<'py>(
     match algorithm {
         "lapjv" => Ok(lapjv(matrix)),
         "hungarian" => Ok(hungarian(matrix)),
+        "lapmod" => Ok(lapmod(matrix)),
         _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-            "Unknown algorithm. Supported algorithms: 'lapjv', 'hungarian'",
+            "Unknown algorithm. Supported algorithms: 'lapjv', 'hungarian', 'lapmod'",
         )),
     }
 }

@@ -7,12 +7,15 @@ import lap
 
 if __name__ == "__main__":
     # Quick example for a 3x3 matrix
-    cols = 3000
-    rows = 3000
+    cols = 5
+    rows = 5
+    algos = ["lapjv", "hungarian", "lapmod"]
     matrix = np.random.rand(rows, cols)
     for i in range(10):
         
-        for algo in ["lapjv", "hungarian"]:
+        for algo in algos:
+            if algo != "lapjv":
+                continue
             print(f"\nAlgorithm: {algo}")
             start = time.time()
             fastlap_cost, fastlap_rows, fastlap_cols = fastlap.solve_lap(matrix, algo)
@@ -38,6 +41,12 @@ if __name__ == "__main__":
                 lap_end = time.time()
                 print(f"lap.lapjv: Time={lap_end - start:.8f}s")
                 # print(f"lap.lapjv: Cost={lap_cost}, Rows={lap_rows}, Cols={lap_cols}")
+            if algo == "lapmod":
+                start = time.time()
+                lapmod_cost, lapmod_rows, lapmod_cols = lap.lapmod(matrix)
+                lapmod_end = time.time()
+                print(f"lap.lapmod: Time={lapmod_end - start:.8f}s")
+                # print(f"lap.lapmod: Cost={lapmod_cost}, Rows={lapmod_rows}, Cols={lapmod_cols}")
 
 """
 First release:
