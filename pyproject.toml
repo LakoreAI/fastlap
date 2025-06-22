@@ -13,10 +13,11 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "lap>=0.4.0",
-    "maturin>=1.8.7",
+    "maturin[patchelf]>=1.8.7",
     "numpy>=1.20,<2.0",
     "pytest>=7.0",
     "scipy>=1.8",
+    "twine>=6.1.0",
 ]
 [tool.maturin]
 features = ["pyo3/extension-module"]
