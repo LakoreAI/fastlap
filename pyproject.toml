@@ -4,7 +4,17 @@ build-backend = "maturin"
 
 [project]
 name = "fastlap"
+description = "Python’s LAP (Linear Assignment Problem) solver — written in Rust for performance"
 requires-python = ">=3.8"
+license = {file = "LICENSE"}
+keywords = ["lap", "linear assignment problem", "hungarian", "lapjv", "lapmod"]
+authors = [
+  {email = "minh.leduc.0210@gmail.com"},
+  {name = "Le Duc Minh"}
+]
+maintainers = [
+  {name = "Le Duc Minh", email = "minh.leduc.0210@gmail.com"}
+]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
