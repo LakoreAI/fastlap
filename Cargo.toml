@@ -1,6 +1,6 @@
 [package]
 name = "fastlap"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "Fast Linear Assignment Problem (LAP) solver with Python bindings"
 authors = ["Le Duc Minh <minh.leduc.0210@gmail.com>"]
