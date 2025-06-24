@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # Quick example for a 3x3 matrix
     cols = 5
     rows = 5
-    algos = ["lapjv", "hungarian", "lapmod"]
+    algos = ["lapjv", "hungarian"]
     matrix = np.random.rand(rows, cols)
     for i in range(10):
         

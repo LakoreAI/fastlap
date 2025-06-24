@@ -1,4 +1,8 @@
-# **fastlap**
+
+<div style="text-align: center;">
+  <image src="assets/fastlap.png" alt="fastlap logo" width="50%"/>
+</div>
+
 
 **Python’s LAP (Linear Assignment Problem) solver — written in Rust for performance.**
 
