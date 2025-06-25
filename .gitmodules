@@ -1,0 +1,3 @@
+[submodule "docs/fastlap.github.io"]
+	path = docs/fastlap.github.io
+	url = git@github.com:8Opt/fastlap.github.io.git
