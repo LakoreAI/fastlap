@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## ...
+
+### Added
+
+- Add Dantzig's algorithm
+- Add Auction algorithm
+- Add Subgradient algorithm
+- Add documentation (build with Zola)
+
+### Updated/Changed
+
+- Update README.md
+
+### Fixed
+
+
+---
+
 ## 23/06/2025
 
 ### Added

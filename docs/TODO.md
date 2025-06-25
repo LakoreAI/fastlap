@@ -1,3 +1,7 @@
+# TODO
+
+## Algorithms
+
 1. [x] Hungarian Algorithm (Kuhn-Munkres Algorithm): The Hungarian algorithm is a well-known
 algorithm for solving LAP. It provides an efficient way to find the optimal solution by
 iteratively finding augmenting paths in a weighted bipartite graph.
@@ -20,3 +24,8 @@ the problem. It then assigns the reduced problem using a simple greedy strategy.
 assigning tasks to agents based on their ranks. It computes the ranks of agents for each task
 and assigns tasks to agents with the lowest ranks, iteratively reducing the ranks until an
 assignment is achieved
+
+
+## Release
+
+- [ ] 
