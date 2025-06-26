@@ -1,10 +1,12 @@
 
 <div style="text-align: center;">
-  <image src="docs/static/fastlap.png" alt="fastlap logo" width="50%"/>
+  <img src="https://raw.githubusercontent.com/8Opt/fastlap/main/docs/static/fastlap.png" alt="fastlap logo" width="50%"/>
 </div>
 
 
-fastlap: High-Performance Linear Assignment Problem Solver
+<div style="text-align: center;">
+<h2>fastlap<br>High-Performance Linear Assignment Problem Solver</h2>
+</div>
 
   
 
@@ -28,11 +30,7 @@ fastlap is a high-performance Python library for solving Linear Assignment Probl
 
 ## 🚀 Getting Started
 
-:::warning
-
-fastlap is under active development and may not yet be fully stable. Use with caution in production environments. And to be honest, I am still struggling with 
-
-:::
+> fastlap is under active development and may not yet be fully stable. Use with caution in production environments. And to be honest, I am still struggling with publish this package to PyPI.
 
 ### Installation
 To build fastlap from source, ensure you have maturin installed.
@@ -50,7 +48,9 @@ pip install maturin
 
 
 # 3. Build and install
-maturin develop
+maturin build
+
+# or maturin develop
 ```
 
 ### Example Usage
