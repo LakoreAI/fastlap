@@ -29,7 +29,7 @@ fn solve_lap<'py>(
 }
 
 #[pymodule]
-fn _fastlap_rs(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn fastlap(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(solve_lap, m)?)?;
     Ok(())
 }

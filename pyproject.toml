@@ -8,6 +8,7 @@ description = "Python’s LAP (Linear Assignment Problem) solver — written in 
 requires-python = ">=3.8"
 license = {file = "LICENSE"}
 keywords = ["lap", "linear assignment problem", "hungarian", "lapjv", "dantzig", "auction", "subgradient"]
+categories = ["algorithms", "science"]
 authors = [
   {email = "minh.leduc.0210@gmail.com"},
   {name = "Le Duc Minh"}
@@ -25,8 +26,6 @@ dependencies = [
     "lap>=0.4.0",
     "maturin[patchelf]>=1.8.7",
     "numpy>=1.20,<2.0",
-    "pytest>=7.0",
-    "scipy>=1.8",
     "twine>=6.1.0",
 ]
 [tool.maturin]

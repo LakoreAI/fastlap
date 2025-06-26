@@ -1,6 +1,6 @@
 [package]
 name = "fastlap"
-version = "0.1.5"
+version = "0.1.6-rc.1"
 edition = "2021"
 description = "Fast Linear Assignment Problem (LAP) solver with Python bindings"
 authors = ["Le Duc Minh <minh.leduc.0210@gmail.com>"]
@@ -8,12 +8,12 @@ license = "MIT"
 repository = "https://github.com/8Opt/fastlap"
 homepage = "https://github.com/8Opt/fastlap"
 documentation = "https://github.com/8Opt/fastlap#readme"
-keywords = ["linear-assignment", "optimization"]
+keywords = ["linear-assignment", "optimization", "lap", "hungarian", "lapjv", "dantzig", "auction", "subgradient"]
 categories = ["algorithms", "science"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "_fastlap_rs"
+name = "fastlap"
 crate-type = ["cdylib"]
 
 [dependencies]
