@@ -3,9 +3,11 @@ use pyo3::prelude::*;
 
 pub mod lap;
 pub mod matrix;
+pub mod utils;
 
 use crate::lap::{auction, dantzig, hungarian, lapjv, lapmod, subgradient};
 use crate::matrix::*;
+use crate::utils::*;
 
 #[pyfunction]
 fn solve_lap<'py>(
@@ -22,14 +24,21 @@ fn solve_lap<'py>(
         "subgradient" => Ok(subgradient::solve(matrix)),
         "auction" => Ok(auction::solve(matrix)),
         "dantzig" => Ok(dantzig::solve(matrix)),
-        _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-            "Unknown algorithm. Supported algorithms: 'lapjv', 'hungarian', 'lapmod', 'subgradient'",
-        )),
+        _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+            "Unknown algorithm. Supported algorithms: {}",
+            supported_algorithms().join(", ")
+        ))),
     }
+}
+
+#[pyfunction]
+fn get_supported_algorithms<'py>(_py: Python<'py>) -> Vec<&'py str> {
+    supported_algorithms()
 }
 
 #[pymodule]
 fn fastlap(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(solve_lap, m)?)?;
+    m.add_function(wrap_pyfunction!(get_supported_algorithms, m)?)?;
     Ok(())
 }

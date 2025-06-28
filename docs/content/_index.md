@@ -29,20 +29,12 @@ Discover additional content:
 
 - With Subitems
   - With Subsubitems
-  - [Example Page](./about)
+  - [About](./about)
 - this list is just the content of `content/_index.md`, the tests are shamelessly stolen from [no style, please!](https://www.getzola.org/themes/no-style-please/)
 
 ## Online Presence
 
-Stay connected with us:
+Stay connected with me:
 
-- Email: [jgll6dij6@mozmail.com](mailto:jgll6dij6@mozmail.com)
-- Code Repositories: [Speyll@GitHub](https://github.com/Speyll)
-- @Speyll anywhere else.
-
-## Webrings
-
-Join our webrings and explore more:
-
-- 🈯 {{ webring(prev="#", webring="#", webringName="Random Webring", next="#") }}
-- 🎶 {{ webring(prev="#", webring="#", webringName="Another Webring", next="#") }}
+- Email: [minh.leduc.0210@gmail.com](mailto:minh.leduc.0210@gmail.com)
+- Code Repositories: [fastlap@GitHub](https://github.com/8Opt/fastlap)

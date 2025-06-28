@@ -8,7 +8,12 @@
 <h2>fastlap<br>High-Performance Linear Assignment Problem Solver</h2>
 </div>
 
-  
+<div style="text-align: center;">
+<img src="https://img.shields.io/badge/in%20progress-8A2BE2" alt="in progress">
+<img src="https://img.shields.io/badge/Python-3.8–3.10-blue" alt="Python 3.8–3.10">  
+<img src="https://img.shields.io/badge/Rust-1.80.0-blue" alt="Rust 1.80.0">  
+<img src="https://img.shields.io/badge/PyPI-1.0.0-blue" alt="PyPI 1.0.0">  
+</div>
 
 
 fastlap is a high-performance Python library for solving Linear Assignment Problems (LAP), implemented in Rust for optimal speed and efficiency. Leveraging the PyO3 framework, fastlap seamlessly integrates Rust's performance with Python's ease of use, delivering a lightweight and robust solution for assignment optimization tasks.
@@ -30,6 +35,7 @@ fastlap is a high-performance Python library for solving Linear Assignment Probl
 
 ## 🚀 Getting Started
 
+> [!WARNING]\
 > fastlap is under active development and may not yet be fully stable. Use with caution in production environments. And to be honest, I am still struggling with publish this package to PyPI.
 
 ### Installation
@@ -49,13 +55,14 @@ pip install maturin
 
 # 3. Build and install
 maturin build
-
 # or maturin develop
+
 ```
 
 ### Example Usage
 
 ```python
+
 import fastlap
 
 # Define a sample cost matrix
@@ -66,17 +73,22 @@ cost_matrix = [
 ]
 
 ##  Solve the LAP using the LAPJV algorithm
-total_cost, row_assignments, col_assignments = fastlap.solve_lap(cost_matrix, method="lapjv")
+total_cost, row_assignments, col_assignments = fastlap.solve_lap(cost_matrix, algorithm="lapjv")
 
 print("Total Cost:", total_cost)
 print("Row Assignments:", row_assignments)
 print("Column Assignments:", col_assignments)
+
+
 ```
 
 
 ## 📄 Citation
 
 If you use fastlap in your research or projects, please cite it as follows:
+
+```
+
 @software{fastlap2025,
   author       = {Le Duc Minh},
   title        = {fastlap: A High-Performance Python LAP Solver Powered by Rust},
@@ -85,6 +97,9 @@ If you use fastlap in your research or projects, please cite it as follows:
   url          = {https://github.com/8Opt/fastlap},
   note         = {Python-Rust implementation of LAPJV, Hungarian, LAPMOD, Dantzig’s, Auction, and Subgradient algorithms}
 }
+
+```
+
 
 ## 📃 License
 fastlap is licensed under the MIT License © 2025.
