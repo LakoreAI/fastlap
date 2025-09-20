@@ -1,9 +1,9 @@
-pub fn solve(cost: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
-    let n = cost.len();
+pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
+    let n = matrix.len();
     if n == 0 {
         return (0.0, vec![], vec![]);
     }
-    let m = cost[0].len();
+    let m = matrix[0].len();
     if n != m {
         return (0.0, vec![], vec![]);
     }
@@ -29,7 +29,7 @@ pub fn solve(cost: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
             let mut min_reduced_cost = f64::INFINITY;
             let mut best_j = 0;
             for j in 0..n {
-                let reduced_cost = cost[i][j] - u[i] - v[j];
+                let reduced_cost = matrix[i][j] - u[i] - v[j];
                 if reduced_cost < min_reduced_cost && !col_assigned[j] {
                     min_reduced_cost = reduced_cost;
                     best_j = j;
@@ -82,7 +82,7 @@ pub fn solve(cost: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         .iter()
         .enumerate()
         .filter(|(_, &j)| j != usize::MAX)
-        .map(|(i, &j)| cost[i][j])
+        .map(|(i, &j)| matrix[i][j])
         .sum();
 
     (total_cost, row_assign, col_assign)

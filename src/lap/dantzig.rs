@@ -1,15 +1,15 @@
-pub fn solve(cost: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
-    let n = cost.len();
+pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
+    let n = matrix.len();
     if n == 0 {
         return (0.0, vec![], vec![]);
     }
-    let m = cost[0].len();
+    let m = matrix[0].len();
     if n != m {
         return (0.0, vec![], vec![]);
     }
 
     // Initialize reduced cost matrix
-    let mut reduced_cost = cost.clone();
+    let mut reduced_cost = matrix.clone();
     let mut row_assign = vec![usize::MAX; n]; // Row to column assignments
     let mut col_assign = vec![usize::MAX; n]; // Column to row assignments
     let mut row_covered = vec![false; n];
@@ -123,7 +123,7 @@ pub fn solve(cost: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         .iter()
         .enumerate()
         .filter(|(_, &j)| j != usize::MAX)
-        .map(|(i, &j)| cost[i][j])
+        .map(|(i, &j)| matrix[i][j])
         .sum();
 
     (total_cost, row_assign, col_assign)

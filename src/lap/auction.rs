@@ -1,9 +1,9 @@
-pub fn solve(values: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
-    let n = values.len();
+pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
+    let n = matrix.len();
     if n == 0 {
         return (0.0, vec![], vec![]);
     }
-    let m = values[0].len();
+    let m = matrix[0].len();
     if n != m {
         return (0.0, vec![], vec![]);
     }
@@ -22,7 +22,7 @@ pub fn solve(values: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
 
         // Find best and second-best items for bidder
         for item in 0..n {
-            let value = values[bidder][item] - prices[item];
+            let value = matrix[bidder][item] - prices[item];
             if value > best_value {
                 second_best_value = best_value;
                 best_value = value;
@@ -53,7 +53,7 @@ pub fn solve(values: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         .iter()
         .enumerate()
         .filter(|(_, &item)| item != usize::MAX)
-        .map(|(bidder, &item)| values[bidder][item])
+        .map(|(bidder, &item)| matrix[bidder][item])
         .sum();
 
     (total_value, row_assign, col_assign)
