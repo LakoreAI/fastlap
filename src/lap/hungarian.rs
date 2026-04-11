@@ -1,4 +1,9 @@
-pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
+use crate::types::{LapSolution, UNASSIGNED};
+
+/// Solves the Linear Assignment Problem using Hungarian algorithm (Kuhn-Munkres).
+/// Note: This implementation uses a simplified augmenting path approach that may
+/// fall into local minima / infinite loops if not bounded. Bounded by max_iterations.
+pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
     let n = matrix.len();
     if n == 0 {
         return (0.0, vec![], vec![]);
@@ -25,8 +30,8 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
     // Cover zeros
     let mut row_covered = vec![false; n];
     let mut col_covered = vec![false; m];
-    let mut row_assign = vec![usize::MAX; n];
-    let mut col_assign = vec![usize::MAX; m];
+    let mut row_assign = vec![UNASSIGNED; n];
+    let mut col_assign = vec![UNASSIGNED; m];
 
     // Initial assignment
     for i in 0..n {
@@ -41,8 +46,10 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         }
     }
 
+    let mut max_iters = n * n * n; // Prevent infinite loop in worst-case
     // Iterative augmentation
-    while row_covered.iter().any(|&x| !x) {
+    while row_covered.iter().any(|&x| !x) && max_iters > 0 {
+        max_iters -= 1;
         let mut zeros = vec![];
         for i in 0..n {
             if !row_covered[i] {
@@ -94,12 +101,11 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
             }
         } else {
             // Augment path (simplified)
-            for &(i, j) in &zeros {
+            if let Some(&(i, j)) = zeros.first() {
                 row_assign[i] = j;
                 col_assign[j] = i;
                 row_covered[i] = true;
                 col_covered[j] = true;
-                break;
             }
         }
     }
@@ -107,7 +113,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
     let total_cost: f64 = row_assign
         .iter()
         .enumerate()
-        .filter(|(_, &j)| j != usize::MAX)
+        .filter(|(_, &j)| j != UNASSIGNED)
         .map(|(i, &j)| matrix[i][j])
         .sum();
 

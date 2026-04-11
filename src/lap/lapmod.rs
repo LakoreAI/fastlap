@@ -1,4 +1,7 @@
-pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
+use crate::types::{LapSolution, UNASSIGNED};
+
+/// Solves the Linear Assignment Problem using Jonker-Volgenant (LAPJV) with modifications algorithm.
+pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
     let n = matrix.len();
     if n == 0 {
         return (0.0, vec![], vec![]);
@@ -22,15 +25,15 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
     let n = padded_matrix.len();
     let mut u = vec![0.0; n]; // Dual variables for rows
     let mut v = vec![0.0; n]; // Dual variables for columns
-    let mut row_assign = vec![usize::MAX; n];
-    let mut col_assign = vec![usize::MAX; n];
+    let mut row_assign = vec![UNASSIGNED; n];
+    let mut col_assign = vec![UNASSIGNED; n];
 
     // Greedy initialization: skip INFINITY costs
     for i in 0..n {
         if let Some((j_min, &min_val)) = padded_matrix[i]
             .iter()
             .enumerate()
-            .filter(|(j, &cost)| cost != f64::INFINITY && col_assign[*j] == usize::MAX)
+            .filter(|(j, &cost)| cost != f64::INFINITY && col_assign[*j] == UNASSIGNED)
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         {
             row_assign[i] = j_min;
@@ -41,22 +44,21 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
 
     // Augmenting path loop
     for i in 0..n {
-        if row_assign[i] != usize::MAX {
+        if row_assign[i] != UNASSIGNED {
             continue;
         }
         let mut min_slack = vec![f64::INFINITY; n];
-        let mut prev = vec![usize::MAX; n];
+        let mut prev = vec![UNASSIGNED; n];
         let mut visited = vec![false; n];
         let mut marked_row = i;
-        #[allow(unused_assignments)]
-        let mut marked_col = usize::MAX;
+        let marked_col;
 
         loop {
             visited[marked_row] = true;
             // Only consider finite costs
             for j in 0..n {
                 let cost = padded_matrix[marked_row][j];
-                if cost != f64::INFINITY && !visited[j] && col_assign[j] != usize::MAX {
+                if cost != f64::INFINITY && !visited[j] && col_assign[j] != UNASSIGNED {
                     let slack = cost - u[marked_row] - v[j];
                     if slack < min_slack[j] {
                         min_slack[j] = slack;
@@ -68,12 +70,12 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
             let (j, &delta) = min_slack
                 .iter()
                 .enumerate()
-                .filter(|(j, _)| !visited[*j] && col_assign[*j] != usize::MAX)
+                .filter(|(j, _)| !visited[*j] && col_assign[*j] != UNASSIGNED)
                 .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 .unwrap_or((0, &f64::INFINITY));
 
             if delta == f64::INFINITY {
-                let unassigned_j = (0..n).find(|&j| col_assign[j] == usize::MAX).unwrap();
+                let unassigned_j = (0..n).find(|&j| col_assign[j] == UNASSIGNED).unwrap();
                 marked_col = unassigned_j;
                 break;
             }
@@ -91,12 +93,13 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         }
 
         // Augment path
-        while marked_col != usize::MAX {
-            let i_prev = prev[marked_col];
+        let mut curr_col = marked_col;
+        while curr_col != UNASSIGNED {
+            let i_prev = prev[curr_col];
             let j_prev = row_assign[i_prev];
-            row_assign[i_prev] = marked_col;
-            col_assign[marked_col] = i_prev;
-            marked_col = j_prev;
+            row_assign[i_prev] = curr_col;
+            col_assign[curr_col] = i_prev;
+            curr_col = j_prev;
         }
     }
 
@@ -104,7 +107,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
     let total_cost: f64 = row_assign
         .iter()
         .enumerate()
-        .filter(|(i, &j)| j != usize::MAX && *i < n && j < m)
+        .filter(|(i, &j)| j != UNASSIGNED && *i < n && j < m)
         .map(|(i, &j)| matrix[i][j])
         .sum();
 

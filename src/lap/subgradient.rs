@@ -1,4 +1,7 @@
-pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
+use crate::types::{LapSolution, UNASSIGNED};
+
+/// Solves the Linear Assignment Problem using a subgradient optimization method.
+pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
     let n = matrix.len();
     if n == 0 {
         return (0.0, vec![], vec![]);
@@ -12,17 +15,15 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
     let initial_step = 1.0;
     let mut u = vec![0.0; n]; // Row dual variables
     let mut v = vec![0.0; n]; // Column dual variables
-    let mut row_assign = vec![usize::MAX; n]; // Row to column assignments
-    let mut col_assign = vec![usize::MAX; n]; // Column to row assignments
-    #[allow(unused_assignments)]
-    let mut step = initial_step;
+    let mut row_assign = vec![UNASSIGNED; n]; // Row to column assignments
+    let mut col_assign = vec![UNASSIGNED; n]; // Column to row assignments
 
     for iteration in 0..max_iterations {
         // Initialize assignments and violation counts
         let mut row_assigned = vec![false; n];
         let mut col_assigned = vec![false; n];
-        row_assign.fill(usize::MAX);
-        col_assign.fill(usize::MAX);
+        row_assign.fill(UNASSIGNED);
+        col_assign.fill(UNASSIGNED);
 
         // Greedy assignment based on reduced costs
         for i in 0..n {
@@ -47,19 +48,19 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         let mut subgradient_u = vec![0.0; n];
         let mut subgradient_v = vec![0.0; n];
         for i in 0..n {
-            if row_assign[i] == usize::MAX {
+            if row_assign[i] == UNASSIGNED {
                 subgradient_u[i] = -1.0; // Unassigned row
             } else {
                 subgradient_u[i] = 1.0; // Assigned row
             }
         }
         for j in 0..n {
-            let assigned = col_assign[j] != usize::MAX;
+            let assigned = col_assign[j] != UNASSIGNED;
             subgradient_v[j] = if assigned { -1.0 } else { 1.0 };
         }
 
         // Check for convergence
-        let unassigned_rows = row_assign.iter().filter(|&&col| col == usize::MAX).count();
+        let unassigned_rows = row_assign.iter().filter(|&&col| col == UNASSIGNED).count();
         if unassigned_rows == 0 {
             break;
         }
@@ -69,10 +70,10 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
             + subgradient_v.iter().map(|x| x * x).sum::<f64>())
         .sqrt();
         if norm > 0.0 {
-            step = initial_step / (1.0 + iteration as f64 * 0.01); // Diminishing step size
+            let s = initial_step / (1.0 + iteration as f64 * 0.01); // Diminishing step size
             for i in 0..n {
-                u[i] += step * subgradient_u[i] / norm;
-                v[i] += step * subgradient_v[i] / norm;
+                u[i] += s * subgradient_u[i] / norm;
+                v[i] += s * subgradient_v[i] / norm;
             }
         }
     }
@@ -81,7 +82,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
     let total_cost: f64 = row_assign
         .iter()
         .enumerate()
-        .filter(|(_, &j)| j != usize::MAX)
+        .filter(|(_, &j)| j != UNASSIGNED)
         .map(|(i, &j)| matrix[i][j])
         .sum();
 

@@ -1,4 +1,7 @@
-pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
+use crate::types::{LapSolution, UNASSIGNED};
+
+/// Solves the Linear Assignment Problem using Dantzig's algorithm (Simplex-like).
+pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
     let n = matrix.len();
     if n == 0 {
         return (0.0, vec![], vec![]);
@@ -10,8 +13,8 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
 
     // Initialize reduced cost matrix
     let mut reduced_cost = matrix.clone();
-    let mut row_assign = vec![usize::MAX; n]; // Row to column assignments
-    let mut col_assign = vec![usize::MAX; n]; // Column to row assignments
+    let mut row_assign = vec![UNASSIGNED; n]; // Row to column assignments
+    let mut col_assign = vec![UNASSIGNED; n]; // Column to row assignments
     let mut row_covered = vec![false; n];
     let mut col_covered = vec![false; n];
 
@@ -53,7 +56,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
     let max_iterations = n * n;
     for _ in 0..max_iterations {
         // Check if optimal (all rows assigned)
-        if row_assign.iter().all(|&j| j != usize::MAX) {
+        if row_assign.iter().all(|&j| j != UNASSIGNED) {
             break;
         }
 
@@ -61,7 +64,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         let mut pivot_row = 0;
         let mut found_unassigned = false;
         for i in 0..n {
-            if row_assign[i] == usize::MAX {
+            if row_assign[i] == UNASSIGNED {
                 pivot_row = i;
                 found_unassigned = true;
                 break;
@@ -83,9 +86,9 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         }
 
         // Update assignments
-        if col_assign[pivot_col] != usize::MAX {
+        if col_assign[pivot_col] != UNASSIGNED {
             let prev_row = col_assign[pivot_col];
-            row_assign[prev_row] = usize::MAX;
+            row_assign[prev_row] = UNASSIGNED;
             row_covered[prev_row] = false;
         }
         row_assign[pivot_row] = pivot_col;
@@ -122,7 +125,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
     let total_cost: f64 = row_assign
         .iter()
         .enumerate()
-        .filter(|(_, &j)| j != usize::MAX)
+        .filter(|(_, &j)| j != UNASSIGNED)
         .map(|(i, &j)| matrix[i][j])
         .sum();
 

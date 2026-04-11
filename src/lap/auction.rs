@@ -1,4 +1,8 @@
-pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
+use crate::types::{LapSolution, UNASSIGNED};
+use std::collections::VecDeque;
+
+/// Solves the Linear Assignment Problem using the Auction algorithm.
+pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
     let n = matrix.len();
     if n == 0 {
         return (0.0, vec![], vec![]);
@@ -10,12 +14,11 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
 
     let epsilon = 0.01; // Bidding increment
     let mut prices = vec![0.0; n]; // Item prices
-    let mut row_assign = vec![usize::MAX; n]; // Bidder (row) to item (column)
-    let mut col_assign = vec![usize::MAX; n]; // Item (column) to bidder (row)
-    let mut unassigned = (0..n).collect::<Vec<usize>>(); // Unassigned bidders
+    let mut row_assign = vec![UNASSIGNED; n]; // Bidder (row) to item (column)
+    let mut col_assign = vec![UNASSIGNED; n]; // Item (column) to bidder (row)
+    let mut unassigned: VecDeque<usize> = (0..n).collect(); // Unassigned bidders
 
-    while !unassigned.is_empty() {
-        let bidder = unassigned[0];
+    while let Some(bidder) = unassigned.pop_front() {
         let mut best_item = 0;
         let mut best_value = f64::NEG_INFINITY;
         let mut second_best_value = f64::NEG_INFINITY;
@@ -37,22 +40,21 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> (f64, Vec<usize>, Vec<usize>) {
         prices[best_item] += bid;
 
         // Update assignments
-        if col_assign[best_item] != usize::MAX {
+        if col_assign[best_item] != UNASSIGNED {
             let prev_bidder = col_assign[best_item];
-            unassigned.push(prev_bidder);
-            row_assign[prev_bidder] = usize::MAX;
+            unassigned.push_back(prev_bidder);
+            row_assign[prev_bidder] = UNASSIGNED;
         }
 
         row_assign[bidder] = best_item;
         col_assign[best_item] = bidder;
-        unassigned.remove(0);
     }
 
     // Calculate total value
     let total_value: f64 = row_assign
         .iter()
         .enumerate()
-        .filter(|(_, &item)| item != usize::MAX)
+        .filter(|(_, &item)| item != UNASSIGNED)
         .map(|(bidder, &item)| matrix[bidder][item])
         .sum();
 
