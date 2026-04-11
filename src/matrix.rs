@@ -44,10 +44,10 @@ pub fn extract_sparse_matrix<'py>(cost_matrix: &Bound<'py, PyAny>) -> PyResult<V
 }
 
 /// Convert input (dense or CSR) to a validated dense matrix
-pub fn extract_matrix<'py>(cost_matrix: &Bound<'py, PyArray2<f64>>) -> PyResult<Vec<Vec<f64>>> {
+pub fn extract_matrix<'py>(cost_matrix: &Bound<'py, PyAny>) -> PyResult<Vec<Vec<f64>>> {
     // Try dense first
     if let Ok(array) = cost_matrix.downcast::<PyArray2<f64>>() {
-        let matrix = extract_dense_matrix(&array.readonly())?;
+        let matrix = extract_dense_matrix(array)?;
         return validate_matrix(matrix);
     }
 

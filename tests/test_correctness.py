@@ -34,7 +34,7 @@ def test_correctness_hungarian(size):
         scipy_cols,
         fastlap_cost,
         scipy_cost,
-        f"fastlap.hungarian",
+        "fastlap.hungarian",
         "scipy",
     )
 
@@ -58,6 +58,6 @@ def test_correctness_lapjv(size):
         lap_cols,
         fastlap_cost,
         lap_cost,
-        f"fastlap.lapjv",
+        "fastlap.lapjv",
         "lap",
     )

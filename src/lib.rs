@@ -1,20 +1,22 @@
-use numpy::PyArray2;
+#![allow(clippy::needless_range_loop)]
 use pyo3::prelude::*;
 
 pub mod lap;
 pub mod matrix;
+pub mod types;
 pub mod utils;
 
 use crate::lap::{auction, dantzig, hungarian, lapjv, lapmod, subgradient};
-use crate::matrix::*;
-use crate::utils::*;
+use crate::matrix::extract_matrix;
+use crate::types::LapSolution;
+use crate::utils::supported_algorithms;
 
 #[pyfunction]
 fn solve_lap<'py>(
     _py: Python<'py>,
-    cost_matrix: &Bound<'py, PyArray2<f64>>,
+    cost_matrix: &Bound<'py, PyAny>,
     algorithm: &str,
-) -> PyResult<(f64, Vec<usize>, Vec<usize>)> {
+) -> PyResult<LapSolution> {
     let matrix = extract_matrix(cost_matrix)?;
 
     match algorithm {
@@ -32,12 +34,12 @@ fn solve_lap<'py>(
 }
 
 #[pyfunction]
-fn get_supported_algorithms<'py>(_py: Python<'py>) -> Vec<&'py str> {
-    supported_algorithms()
+fn get_supported_algorithms() -> Vec<&'static str> {
+    supported_algorithms().to_vec()
 }
 
 #[pymodule]
-fn fastlap(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn fastlap(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(solve_lap, m)?)?;
     m.add_function(wrap_pyfunction!(get_supported_algorithms, m)?)?;
     Ok(())

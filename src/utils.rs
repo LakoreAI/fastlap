@@ -1,5 +1,5 @@
-pub fn supported_algorithms() -> Vec<&'static str> {
-    vec![
+pub fn supported_algorithms() -> &'static [&'static str] {
+    &[
         "lapjv",
         "hungarian",
         "lapmod",
