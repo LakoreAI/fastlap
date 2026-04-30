@@ -68,6 +68,19 @@ jobs:
     if: github.event_name == 'release'
 
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version match
+        run: |
+          TAG_VERSION=${{ github.event.release.tag_name }}
+          # Remove 'v' prefix if present
+          TAG_VERSION=${TAG_VERSION#v}
+          PY_VERSION=$(grep '^version =' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          if [ "$TAG_VERSION" != "$PY_VERSION" ]; then
+            echo "Version mismatch: tag $TAG_VERSION vs pyproject $PY_VERSION"
+            exit 1
+          fi
+
       - uses: actions/download-artifact@v4
         with:
           pattern: wheels-*
