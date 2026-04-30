@@ -221,7 +221,7 @@ dependencies = [
 requires-dist = [
     { name = "lap", specifier = ">=0.4.0" },
     { name = "maturin", extras = ["patchelf"], specifier = ">=1.8.7" },
-    { name = "numpy", specifier = ">=1.20,<2.0" },
+    { name = "numpy", specifier = ">=1.20,<3.0" },
     { name = "twine", specifier = ">=6.1.0" },
 ]
 
