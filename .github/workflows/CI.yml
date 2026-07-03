@@ -73,11 +73,11 @@ jobs:
       - name: Check version match
         run: |
           TAG_VERSION=${{ github.event.release.tag_name }}
-          # Remove 'v' prefix if present
           TAG_VERSION=${TAG_VERSION#v}
-          PY_VERSION=$(grep '^version =' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
-          if [ "$TAG_VERSION" != "$PY_VERSION" ]; then
-            echo "Version mismatch: tag $TAG_VERSION vs pyproject $PY_VERSION"
+          # pyproject.toml uses dynamic = ["version"], so Cargo.toml is the source of truth.
+          CARGO_VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+            echo "Version mismatch: tag $TAG_VERSION vs Cargo.toml $CARGO_VERSION"
             exit 1
           fi
 
