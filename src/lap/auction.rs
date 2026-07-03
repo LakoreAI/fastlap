@@ -1,7 +1,12 @@
 use crate::types::{LapSolution, UNASSIGNED};
 use std::collections::VecDeque;
 
-/// Solves the Linear Assignment Problem using the Auction algorithm.
+/// Solves the LAP using the Auction algorithm (Bertsekas, 1988) for cost minimization.
+///
+/// Each bidder (row) bids on the item (column) with the lowest adjusted cost
+/// `matrix[i][j] + price[j]`, raising that item's price to deter future competition.
+/// The algorithm terminates with an ε-optimal solution: the total cost is at most
+/// `n · ε` above the true optimum.
 pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
     let n = matrix.len();
     if n == 0 {
@@ -12,51 +17,61 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
         return (0.0, vec![], vec![]);
     }
 
-    let epsilon = 0.01; // Bidding increment
-    let mut prices = vec![0.0; n]; // Item prices
-    let mut row_assign = vec![UNASSIGNED; n]; // Bidder (row) to item (column)
-    let mut col_assign = vec![UNASSIGNED; n]; // Item (column) to bidder (row)
-    let mut unassigned: VecDeque<usize> = (0..n).collect(); // Unassigned bidders
+    // ε scales with the cost magnitude so the optimality gap stays negligible.
+    let max_cost = matrix
+        .iter()
+        .flatten()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
+    let epsilon = (max_cost.abs() * 1e-9).max(1e-12);
+
+    let mut prices = vec![0.0f64; n];
+    let mut row_assign = vec![UNASSIGNED; n];
+    let mut col_assign = vec![UNASSIGNED; n];
+    let mut unassigned: VecDeque<usize> = (0..n).collect();
 
     while let Some(bidder) = unassigned.pop_front() {
+        // Minimization: best item is the one with the lowest (cost + price).
         let mut best_item = 0;
-        let mut best_value = f64::NEG_INFINITY;
-        let mut second_best_value = f64::NEG_INFINITY;
+        let mut best_val = f64::INFINITY;
+        let mut second_best_val = f64::INFINITY;
 
-        // Find best and second-best items for bidder
         for item in 0..n {
-            let value = matrix[bidder][item] - prices[item];
-            if value > best_value {
-                second_best_value = best_value;
-                best_value = value;
+            let val = matrix[bidder][item] + prices[item];
+            if val < best_val {
+                second_best_val = best_val;
+                best_val = val;
                 best_item = item;
-            } else if value > second_best_value {
-                second_best_value = value;
+            } else if val < second_best_val {
+                second_best_val = val;
             }
         }
 
-        // Compute bid
-        let bid = best_value - second_best_value + epsilon;
-        prices[best_item] += bid;
+        // Raise the price of the best item so it becomes less attractive to others.
+        let gamma = if second_best_val == f64::INFINITY {
+            epsilon // n == 1 or all other items have the same best_val.
+        } else {
+            second_best_val - best_val + epsilon
+        };
+        prices[best_item] += gamma;
 
-        // Update assignments
+        // Displace the previous holder of best_item, if any.
         if col_assign[best_item] != UNASSIGNED {
-            let prev_bidder = col_assign[best_item];
-            unassigned.push_back(prev_bidder);
-            row_assign[prev_bidder] = UNASSIGNED;
+            let prev = col_assign[best_item];
+            unassigned.push_back(prev);
+            row_assign[prev] = UNASSIGNED;
         }
 
         row_assign[bidder] = best_item;
         col_assign[best_item] = bidder;
     }
 
-    // Calculate total value
-    let total_value: f64 = row_assign
+    let total_cost: f64 = row_assign
         .iter()
         .enumerate()
         .filter(|(_, &item)| item != UNASSIGNED)
         .map(|(bidder, &item)| matrix[bidder][item])
         .sum();
 
-    (total_value, row_assign, col_assign)
+    (total_cost, row_assign, col_assign)
 }

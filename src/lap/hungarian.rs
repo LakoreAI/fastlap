@@ -1,121 +1,23 @@
-use crate::types::{LapSolution, UNASSIGNED};
+use crate::types::LapSolution;
+use crate::utils::{pad_to_square, sap_solve, trim_solution};
 
-/// Solves the Linear Assignment Problem using Hungarian algorithm (Kuhn-Munkres).
-/// Note: This implementation uses a simplified augmenting path approach that may
-/// fall into local minima / infinite loops if not bounded. Bounded by max_iterations.
+/// Solves the LAP using the Kuhn-Munkres (Hungarian) algorithm.
+///
+/// Uses the O(n³) shortest-augmenting-path formulation with dual variables,
+/// which is mathematically equivalent to the classical matrix-reduction method.
+/// Non-square matrices are padded with a cost above the maximum real entry.
 pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
-    let n = matrix.len();
-    if n == 0 {
+    let nrows = matrix.len();
+    if nrows == 0 {
         return (0.0, vec![], vec![]);
     }
-    let m = matrix[0].len();
-    let mut cost = matrix.clone();
-
-    // Row reduction
-    for i in 0..n {
-        let min_val = cost[i].iter().cloned().fold(f64::INFINITY, f64::min);
-        for j in 0..m {
-            cost[i][j] -= min_val;
-        }
-    }
-
-    // Column reduction
-    for j in 0..m {
-        let min_val = (0..n).map(|i| cost[i][j]).fold(f64::INFINITY, f64::min);
-        for i in 0..n {
-            cost[i][j] -= min_val;
-        }
-    }
-
-    // Cover zeros
-    let mut row_covered = vec![false; n];
-    let mut col_covered = vec![false; m];
-    let mut row_assign = vec![UNASSIGNED; n];
-    let mut col_assign = vec![UNASSIGNED; m];
-
-    // Initial assignment
-    for i in 0..n {
-        for j in 0..m {
-            if cost[i][j] == 0.0 && !row_covered[i] && !col_covered[j] {
-                row_assign[i] = j;
-                col_assign[j] = i;
-                row_covered[i] = true;
-                col_covered[j] = true;
-                break;
-            }
-        }
-    }
-
-    let mut max_iters = n * n * n; // Prevent infinite loop in worst-case
-    // Iterative augmentation
-    while row_covered.iter().any(|&x| !x) && max_iters > 0 {
-        max_iters -= 1;
-        let mut zeros = vec![];
-        for i in 0..n {
-            if !row_covered[i] {
-                for j in 0..m {
-                    if cost[i][j] == 0.0 && !col_covered[j] {
-                        zeros.push((i, j));
-                    }
-                }
-            }
-        }
-
-        if zeros.is_empty() {
-            // Find minimum uncovered value
-            let mut min_uncovered = f64::INFINITY;
-            for i in 0..n {
-                if !row_covered[i] {
-                    for j in 0..m {
-                        if !col_covered[j] {
-                            min_uncovered = min_uncovered.min(cost[i][j]);
-                        }
-                    }
-                }
-            }
-
-            // Adjust matrix
-            for i in 0..n {
-                for j in 0..m {
-                    if row_covered[i] && col_covered[j] {
-                        cost[i][j] += min_uncovered;
-                    } else if !row_covered[i] && !col_covered[j] {
-                        cost[i][j] -= min_uncovered;
-                    }
-                }
-            }
-
-            // Retry assignment
-            for i in 0..n {
-                if !row_covered[i] {
-                    for j in 0..m {
-                        if cost[i][j] == 0.0 && !col_covered[j] {
-                            row_assign[i] = j;
-                            col_assign[j] = i;
-                            row_covered[i] = true;
-                            col_covered[j] = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        } else {
-            // Augment path (simplified)
-            if let Some(&(i, j)) = zeros.first() {
-                row_assign[i] = j;
-                col_assign[j] = i;
-                row_covered[i] = true;
-                col_covered[j] = true;
-            }
-        }
-    }
-
-    let total_cost: f64 = row_assign
+    let fill = matrix
         .iter()
-        .enumerate()
-        .filter(|(_, &j)| j != UNASSIGNED)
-        .map(|(i, &j)| matrix[i][j])
-        .sum();
-
-    (total_cost, row_assign, col_assign)
+        .flatten()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max)
+        + 1.0;
+    let padded = pad_to_square(&matrix, fill);
+    let (_, row_assign, col_assign) = sap_solve(&padded);
+    trim_solution(&matrix, row_assign, col_assign)
 }

@@ -1,63 +1,87 @@
 import pytest
+import numpy as np
 
 from conftest import generate_test_matrix, fastlap_execute, scipy_execute, lap_execute
 
 
-def compare_assignments(
-    row_ind1, col_ind1, row_ind2, col_ind2, cost1, cost2, algo1, algo2, tol=1e-8
-):
-    """Compare assignments and costs between two algorithms."""
-    assert abs(cost1 - cost2) < tol, (
-        f"Cost mismatch: {algo1} ({cost1}) vs {algo2} ({cost2})"
-    )
-    mapping1 = dict(zip(row_ind1, col_ind1))
-    mapping2 = dict(zip(row_ind2, col_ind2))
-    assert mapping1 == mapping2, f"Assignment mismatch: {algo1} vs {algo2}"
-
-
-@pytest.mark.parametrize("size", [2, 3, 4, 5])
-def test_correctness_hungarian(size):
-    """Test fastlap correctness against SciPy for various matrix sizes."""
-    matrix = generate_test_matrix(size)
-
-    # fastlap
-    fastlap_cost, fastlap_rows, fastlap_cols = fastlap_execute(matrix, "hungarian")
-
-    # SciPy
-    scipy_cost, scipy_rows, scipy_cols = scipy_execute(matrix)
-
-    # Compare
-    compare_assignments(
-        fastlap_rows,
-        fastlap_cols,
-        scipy_rows,
-        scipy_cols,
-        fastlap_cost,
-        scipy_cost,
-        "fastlap.hungarian",
-        "scipy",
+def assert_optimal_cost(fastlap_cost, ref_cost, algo, tol=1e-6):
+    assert abs(fastlap_cost - ref_cost) <= tol, (
+        f"{algo}: cost {fastlap_cost:.10f} differs from reference {ref_cost:.10f} "
+        f"by {abs(fastlap_cost - ref_cost):.2e} (tol={tol})"
     )
 
 
-@pytest.mark.parametrize("size", [2, 3, 4, 5])
+def assert_valid_assignment(row_assign, col_assign, n, algo):
+    assert len(row_assign) == n, f"{algo}: row_assign length {len(row_assign)} != {n}"
+    assert len(col_assign) == n, f"{algo}: col_assign length {len(col_assign)} != {n}"
+    assert sorted(row_assign) == list(range(n)), f"{algo}: row_assign is not a permutation"
+    assert sorted(col_assign) == list(range(n)), f"{algo}: col_assign is not a permutation"
+
+
+@pytest.mark.parametrize("size", [2, 3, 4, 5, 10, 20])
 def test_correctness_lapjv(size):
-    """Test fastlap correctness against SciPy for various matrix sizes."""
     matrix = generate_test_matrix(size)
+    cost, rows, cols = fastlap_execute(matrix, "lapjv")
+    ref_cost, _, _ = lap_execute(matrix)
+    assert_optimal_cost(cost, ref_cost, "lapjv")
+    assert_valid_assignment(rows, cols, size, "lapjv")
 
-    # fastlap
-    fastlap_cost, fastlap_rows, fastlap_cols = fastlap_execute(matrix, "lapjv")
 
-    # lap
-    lap_cost, lap_rows, lap_cols = lap_execute(matrix)
+@pytest.mark.parametrize("size", [2, 3, 4, 5, 10, 20])
+def test_correctness_hungarian(size):
+    matrix = generate_test_matrix(size)
+    cost, rows, cols = fastlap_execute(matrix, "hungarian")
+    ref_cost, _, _ = scipy_execute(matrix)
+    assert_optimal_cost(cost, ref_cost, "hungarian")
+    assert_valid_assignment(rows, cols, size, "hungarian")
 
-    # Compare
-    compare_assignments(
-        fastlap_rows,
-        fastlap_cols,
-        lap_rows,
-        lap_cols,
-        fastlap_cost,
-        lap_cost,
-        "fastlap.lapjv",
-        "lap",
-    )
+
+@pytest.mark.parametrize("size", [2, 3, 4, 5, 10, 20])
+def test_correctness_lapmod(size):
+    matrix = generate_test_matrix(size)
+    cost, rows, cols = fastlap_execute(matrix, "lapmod")
+    ref_cost, _, _ = scipy_execute(matrix)
+    assert_optimal_cost(cost, ref_cost, "lapmod")
+    assert_valid_assignment(rows, cols, size, "lapmod")
+
+
+@pytest.mark.parametrize("size", [2, 3, 4, 5, 10, 20])
+def test_correctness_dantzig(size):
+    matrix = generate_test_matrix(size)
+    cost, rows, cols = fastlap_execute(matrix, "dantzig")
+    ref_cost, _, _ = scipy_execute(matrix)
+    assert_optimal_cost(cost, ref_cost, "dantzig")
+    assert_valid_assignment(rows, cols, size, "dantzig")
+
+
+@pytest.mark.parametrize("size", [2, 3, 4, 5, 10, 20])
+def test_correctness_subgradient(size):
+    matrix = generate_test_matrix(size)
+    cost, rows, cols = fastlap_execute(matrix, "subgradient")
+    ref_cost, _, _ = scipy_execute(matrix)
+    assert_optimal_cost(cost, ref_cost, "subgradient")
+    assert_valid_assignment(rows, cols, size, "subgradient")
+
+
+@pytest.mark.parametrize("size", [2, 3, 4, 5, 10, 20])
+def test_correctness_auction(size):
+    """Auction is ε-optimal; cost may exceed the optimum by at most n·ε."""
+    matrix = generate_test_matrix(size)
+    cost, rows, cols = fastlap_execute(matrix, "auction")
+    ref_cost, _, _ = scipy_execute(matrix)
+    tol = max(float(matrix.max()) * size * 1e-7, 1e-4)
+    assert_optimal_cost(cost, ref_cost, "auction", tol=tol)
+    assert_valid_assignment(rows, cols, size, "auction")
+
+
+@pytest.mark.parametrize("size", [2, 3, 4, 5, 10, 20])
+def test_all_algorithms_agree(size):
+    """Every algorithm should produce the same optimal cost for the same input."""
+    matrix = generate_test_matrix(size)
+    ref_cost, _, _ = scipy_execute(matrix)
+
+    exact_algos = ["lapjv", "hungarian", "lapmod", "dantzig", "subgradient"]
+    for algo in exact_algos:
+        cost, rows, cols = fastlap_execute(matrix, algo)
+        assert_optimal_cost(cost, ref_cost, algo)
+        assert_valid_assignment(rows, cols, size, algo)
