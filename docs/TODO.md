@@ -1,11 +1,5 @@
 # fastlap — Project TODO
 
-> Acting as project manager: this list focuses on making fastlap genuinely useful to real users —
-> discoverable on PyPI, trustworthy via correctness, and easy to contribute to.
-> Items are ordered by impact. Each item is self-contained and actionable.
-
----
-
 ## 🔴 P0 — Blockers (ship nothing until these are done)
 
 ### Fix algorithm correctness

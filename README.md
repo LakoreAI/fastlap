@@ -10,9 +10,9 @@
 
 <div style="text-align: center;">
 <img src="https://img.shields.io/badge/in%20progress-8A2BE2" alt="in progress">
-<img src="https://img.shields.io/badge/Python-3.8–3.10-blue" alt="Python 3.8–3.10">  
+<img src="https://img.shields.io/badge/Python-3.9–3.13-blue" alt="Python 3.9–3.13">  
 <img src="https://img.shields.io/badge/Rust-1.80.0-blue" alt="Rust 1.80.0">  
-<img src="https://img.shields.io/badge/PyPI-1.0.0-blue" alt="PyPI 1.0.0">  
+<img src="https://img.shields.io/pypi/v/fastlap" alt="PyPI version">  
 </div>
 
 
@@ -35,16 +35,20 @@ fastlap is a high-performance Python library for solving Linear Assignment Probl
 
 ## 🚀 Getting Started
 
-> [!WARNING]\
-> fastlap is under active development and may not yet be fully stable. Use with caution in production environments. And to be honest, I am still struggling with publish this package to PyPI.
+fastlap is available on PyPI and can be installed with `pip install fastlap`.
 
 ### Installation
-To build fastlap from source, ensure you have maturin installed.
+
+Install fastlap directly from PyPI:
 
 ```bash
+pip install fastlap
+```
 
+For development or building from source:
+
+```bash
 # 1. Clone the project
-
 git clone https://github.com/8Opt/fastlap.git
 cd fastlap
 
@@ -52,11 +56,8 @@ cd fastlap
 pip install maturin
 # or `uv sync`
 
-
 # 3. Build and install
-maturin build
-# or maturin develop
-
+maturin develop
 ```
 
 ### Example Usage

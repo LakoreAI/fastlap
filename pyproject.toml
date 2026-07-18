@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "fastlap"
 description = "Python’s LAP (Linear Assignment Problem) solver — written in Rust for performance"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
 keywords = ["lap", "linear assignment problem", "hungarian", "lapjv", "dantzig", "auction", "subgradient"]
 categories = ["algorithms", "science"]

@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import scipy.sparse as sp
 
 from conftest import generate_test_matrix, fastlap_execute, scipy_execute, lap_execute
 
@@ -85,3 +86,37 @@ def test_all_algorithms_agree(size):
         cost, rows, cols = fastlap_execute(matrix, algo)
         assert_optimal_cost(cost, ref_cost, algo)
         assert_valid_assignment(rows, cols, size, algo)
+
+
+ALL_ALGORITHMS = ["lapjv", "hungarian", "lapmod", "dantzig", "subgradient", "auction"]
+
+
+@pytest.mark.parametrize("size", [3, 4, 5, 10, 20])
+@pytest.mark.parametrize("algo", ALL_ALGORITHMS)
+def test_sparse_matches_dense(algo, size):
+    """A scipy.sparse.csr_matrix input must yield the same result as its dense form."""
+    matrix = generate_test_matrix(size)
+    csr = sp.csr_matrix(matrix)
+
+    dense_cost, dense_rows, dense_cols = fastlap_execute(matrix, algo)
+    sparse_cost, sparse_rows, sparse_cols = fastlap_execute(csr, algo)
+
+    assert abs(dense_cost - sparse_cost) < 1e-9, (
+        f"{algo} size={size}: sparse cost {sparse_cost} != dense cost {dense_cost}"
+    )
+    assert sparse_rows == dense_rows, f"{algo} size={size}: sparse rows differ from dense"
+    assert sparse_cols == dense_cols, f"{algo} size={size}: sparse cols differ from dense"
+
+
+def test_sparse_implicit_zeros_match_toarray():
+    """Unstored CSR entries are treated as 0.0, matching csr.toarray()."""
+    matrix = np.array(
+        [[5.0, 0.0, 3.0], [0.0, 2.0, 0.0], [4.0, 0.0, 1.0]], dtype=np.float64
+    )
+    csr = sp.csr_matrix(matrix)
+    for algo in ALL_ALGORITHMS:
+        sparse_cost, _, _ = fastlap_execute(csr, algo)
+        dense_cost, _, _ = fastlap_execute(csr.toarray(), algo)
+        assert abs(sparse_cost - dense_cost) < 1e-9, (
+            f"{algo}: sparse {sparse_cost} != toarray {dense_cost}"
+        )

@@ -1,7 +1,6 @@
 use numpy::PyReadonlyArray1;
 use numpy::{PyArray2, PyArrayMethods};
 use pyo3::prelude::*;
-use sprs::CsMat;
 
 /// Convert a dense NumPy array to Vec<Vec<f64>>
 pub fn extract_dense_matrix<'py>(
@@ -17,28 +16,57 @@ pub fn extract_dense_matrix<'py>(
     Ok(matrix)
 }
 
-/// Convert a scipy.sparse.csr_matrix to Vec<Vec<f64>>
+/// Convert a scipy.sparse.csr_matrix to a dense Vec<Vec<f64>>.
+///
+/// Unstored entries are filled with 0.0 so the result matches `csr.toarray()`.
+/// scipy stores `indptr`/`indices` as int32 or int64 depending on matrix size,
+/// so both index arrays are cast to int64 (and `data` to float64) before extraction.
 pub fn extract_sparse_matrix<'py>(cost_matrix: &Bound<'py, PyAny>) -> PyResult<Vec<Vec<f64>>> {
-    let indptr: PyReadonlyArray1<usize> = cost_matrix.getattr("indptr")?.extract()?;
-    let indices: PyReadonlyArray1<usize> = cost_matrix.getattr("indices")?.extract()?;
-    let data: PyReadonlyArray1<f64> = cost_matrix.getattr("data")?.extract()?;
+    let (nrows, ncols): (usize, usize) = cost_matrix.getattr("shape")?.extract()?;
 
-    let shape: (usize, usize) = cost_matrix.getattr("shape")?.extract::<(usize, usize)>()?;
+    let indptr_obj = cost_matrix
+        .getattr("indptr")?
+        .call_method1("astype", ("int64",))?;
+    let indices_obj = cost_matrix
+        .getattr("indices")?
+        .call_method1("astype", ("int64",))?;
+    let data_obj = cost_matrix
+        .getattr("data")?
+        .call_method1("astype", ("float64",))?;
 
-    let csr = CsMat::new(
-        shape,
-        indptr.as_slice()?.to_vec(),
-        indices.as_slice()?.to_vec(),
-        data.as_slice()?.to_vec(),
-    );
+    let indptr: PyReadonlyArray1<i64> = indptr_obj.extract()?;
+    let indices: PyReadonlyArray1<i64> = indices_obj.extract()?;
+    let data: PyReadonlyArray1<f64> = data_obj.extract()?;
 
-    let dense: Vec<Vec<f64>> = (0..shape.0)
-        .map(|i| {
-            (0..shape.1)
-                .map(|j| csr.get(i, j).copied().unwrap_or(f64::INFINITY))
-                .collect()
-        })
-        .collect();
+    let indptr = indptr.as_slice()?;
+    let indices = indices.as_slice()?;
+    let data = data.as_slice()?;
+
+    if indptr.len() != nrows + 1 {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "Invalid CSR matrix: indptr length must equal nrows + 1",
+        ));
+    }
+    if indices.len() != data.len() {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "Invalid CSR matrix: indices and data must have equal length",
+        ));
+    }
+
+    let mut dense = vec![vec![0.0f64; ncols]; nrows];
+    for i in 0..nrows {
+        let start = indptr[i] as usize;
+        let end = indptr[i + 1] as usize;
+        for k in start..end {
+            let col = indices[k] as usize;
+            if col >= ncols {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    "Invalid CSR matrix: column index out of bounds",
+                ));
+            }
+            dense[i][col] = data[k];
+        }
+    }
 
     Ok(dense)
 }

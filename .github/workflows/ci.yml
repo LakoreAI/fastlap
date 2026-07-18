@@ -20,6 +20,17 @@ jobs:
       - name: clippy
         run: cargo clippy -- -D warnings
 
+  audit:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      - name: cargo audit
+        run: cargo audit
+
   test-python:
     name: Python ${{ matrix.python-version }} — ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
