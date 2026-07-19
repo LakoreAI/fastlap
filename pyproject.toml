@@ -1,38 +1,59 @@
 [build-system]
-requires = ["maturin>=1.8,<2.0"]
+requires = ["maturin>=1.5,<2.0"]
 build-backend = "maturin"
 
 [project]
 name = "fastlap"
-description = "Python’s LAP (Linear Assignment Problem) solver — written in Rust for performance"
-requires-python = ">=3.8"
+description = "High-performance Linear Assignment Problem (LAP) solver for Python — 6 algorithms, parallel batch, weighted costs, Rust-powered"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
-keywords = ["lap", "linear assignment problem", "hungarian", "lapjv", "dantzig", "auction", "subgradient"]
-categories = ["algorithms", "science"]
-authors = [
-  {email = "minh.leduc.0210@gmail.com"},
-  {name = "Le Duc Minh"}
-]
-maintainers = [
-  {name = "Le Duc Minh", email = "minh.leduc.0210@gmail.com"}
+keywords = [
+    "linear assignment problem",
+    "lap",
+    "hungarian algorithm",
+    "lapjv",
+    "dantzig",
+    "auction algorithm",
+    "subgradient",
+    "combinatorial optimization",
+    "bipartite matching",
+    "object tracking",
+    "task scheduling",
+    "resource allocation",
+    "rust",
+    "pyo3",
+    "performance",
 ]
 classifiers = [
-    "Programming Language :: Rust",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+authors = [
+    {email = "minh.leduc.0210@gmail.com", name = "Le Duc Minh"},
+]
+maintainers = [
+    {name = "Le Duc Minh", email = "minh.leduc.0210@gmail.com"},
 ]
 dynamic = ["version"]
 dependencies = [
-    "numpy>=1.20,<3.0",
+    "numpy>=1.26,<3.0",
 ]
+
 [tool.maturin]
 features = ["pyo3/extension-module"]
 
-[dependency-groups]
-dev = [
-    "lap>=0.5.12",
-    "maturin[patchelf]>=1.8.7",
-    "pytest>=8.3.5",
-    "scipy>=1.10.1",
-    "twine>=6.1.0",
-]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

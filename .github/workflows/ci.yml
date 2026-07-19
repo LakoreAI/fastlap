@@ -19,6 +19,8 @@ jobs:
         run: cargo fmt --check
       - name: clippy
         run: cargo clippy -- -D warnings
+      - name: cargo audit
+        run: cargo install cargo-audit && cargo audit
 
   test-python:
     name: Python ${{ matrix.python-version }} — ${{ matrix.os }}

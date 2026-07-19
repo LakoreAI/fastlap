@@ -66,13 +66,43 @@ pub fn extract_matrix<'py>(cost_matrix: &Bound<'py, PyAny>) -> PyResult<Vec<Vec<
     ))
 }
 
-/// Ensure matrix is rectangular and non-empty
+/// Ensure matrix is rectangular, non-empty, and contains no NaN/Inf values.
 pub fn validate_matrix(matrix: Vec<Vec<f64>>) -> PyResult<Vec<Vec<f64>>> {
-    if matrix.is_empty() || matrix.iter().any(|row| row.len() != matrix[0].len()) {
-        Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-            "Matrix must be non-empty and rectangular",
-        ))
-    } else {
-        Ok(matrix)
+    if matrix.is_empty() {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "Matrix must not be empty",
+        ));
     }
+
+    let ncols = matrix[0].len();
+    if ncols == 0 {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "Matrix rows must not be empty",
+        ));
+    }
+
+    for (i, row) in matrix.iter().enumerate() {
+        if row.len() != ncols {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "Matrix must be rectangular: row 0 has {} columns but row {} has {}",
+                ncols,
+                i,
+                row.len()
+            )));
+        }
+        for (j, &val) in row.iter().enumerate() {
+            if val.is_nan() {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Matrix contains NaN at position [{i}, {j}]"
+                )));
+            }
+            if val.is_infinite() {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Matrix contains infinite value at position [{i}, {j}]"
+                )));
+            }
+        }
+    }
+
+    Ok(matrix)
 }

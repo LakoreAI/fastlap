@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "Running Rust fmt check..."
+cargo fmt --check
+
 echo "Running Rust tests..."
 cargo test --all-features
 

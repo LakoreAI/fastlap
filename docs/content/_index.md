@@ -37,4 +37,4 @@ Discover additional content:
 Stay connected with me:
 
 - Email: [minh.leduc.0210@gmail.com](mailto:minh.leduc.0210@gmail.com)
-- Code Repositories: [fastlap@GitHub](https://github.com/8Opt/fastlap)
+- Code Repositories: [fastlap@GitHub](https://github.com/LakoreAI/fastlap)

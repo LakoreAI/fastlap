@@ -1,4 +1,5 @@
-use crate::types::{LapSolution, UNASSIGNED};
+use crate::lap::{auction, dantzig, hungarian, lapjv, lapmod, subgradient};
+use crate::types::LapSolution;
 
 pub fn supported_algorithms() -> &'static [&'static str] {
     &[
@@ -9,6 +10,23 @@ pub fn supported_algorithms() -> &'static [&'static str] {
         "auction",
         "dantzig",
     ]
+}
+
+/// Dispatch to the named algorithm. Single source of truth for all entry points.
+pub fn solve_with(matrix: Vec<Vec<f64>>, algorithm: &str) -> Result<LapSolution, String> {
+    match algorithm {
+        "lapjv" => Ok(lapjv::solve(matrix)),
+        "hungarian" => Ok(hungarian::solve(matrix)),
+        "lapmod" => Ok(lapmod::solve(matrix)),
+        "subgradient" => Ok(subgradient::solve(matrix)),
+        "auction" => Ok(auction::solve(matrix)),
+        "dantzig" => Ok(dantzig::solve(matrix)),
+        _ => Err(format!(
+            "Unknown algorithm '{}'. Supported: {}",
+            algorithm,
+            supported_algorithms().join(", ")
+        )),
+    }
 }
 
 /// O(n³) shortest-augmenting-path (SAP) solver for a square n×n cost matrix.
@@ -87,18 +105,17 @@ pub fn sap_solve(cost: &[Vec<f64>]) -> LapSolution {
     }
 
     // Convert 1-indexed p[] into 0-indexed row_assign / col_assign.
-    let mut row_assign = vec![UNASSIGNED; n];
-    let mut col_assign = vec![UNASSIGNED; n];
+    let mut row_assign = vec![None; n];
+    let mut col_assign = vec![None; n];
     for j in 1..=n {
         if p[j] != 0 {
-            row_assign[p[j] - 1] = j - 1;
-            col_assign[j - 1] = p[j] - 1;
+            row_assign[p[j] - 1] = Some(j - 1);
+            col_assign[j - 1] = Some(p[j] - 1);
         }
     }
 
     let total_cost: f64 = (0..n)
-        .filter(|&i| row_assign[i] != UNASSIGNED)
-        .map(|i| cost[i][row_assign[i]])
+        .filter_map(|i| row_assign[i].map(|j| cost[i][j]))
         .sum();
 
     (total_cost, row_assign, col_assign)
@@ -123,41 +140,26 @@ pub fn pad_to_square(matrix: &[Vec<f64>], fill: f64) -> Vec<Vec<f64>> {
 
 /// Trim a SAP solution back to the original (nrows × ncols) dimensions.
 ///
-/// Assignments that went to padded rows/columns are mapped to UNASSIGNED.
+/// Assignments that went to padded rows/columns are mapped to None.
 /// The returned cost is recomputed from the original matrix.
 pub fn trim_solution(
     matrix: &[Vec<f64>],
-    row_assign: Vec<usize>,
-    col_assign: Vec<usize>,
+    row_assign: Vec<Option<usize>>,
+    col_assign: Vec<Option<usize>>,
 ) -> LapSolution {
     let nrows = matrix.len();
     let ncols = if nrows > 0 { matrix[0].len() } else { 0 };
 
-    let trimmed_row: Vec<usize> = (0..nrows)
-        .map(|i| {
-            let j = row_assign[i];
-            if j < ncols {
-                j
-            } else {
-                UNASSIGNED
-            }
-        })
+    let trimmed_row: Vec<Option<usize>> = (0..nrows)
+        .map(|i| row_assign[i].filter(|&j| j < ncols))
         .collect();
 
-    let trimmed_col: Vec<usize> = (0..ncols)
-        .map(|j| {
-            let i = col_assign[j];
-            if i < nrows {
-                i
-            } else {
-                UNASSIGNED
-            }
-        })
+    let trimmed_col: Vec<Option<usize>> = (0..ncols)
+        .map(|j| col_assign[j].filter(|&i| i < nrows))
         .collect();
 
     let total_cost: f64 = (0..nrows)
-        .filter(|&i| trimmed_row[i] != UNASSIGNED)
-        .map(|i| matrix[i][trimmed_row[i]])
+        .filter_map(|i| trimmed_row[i].map(|j| matrix[i][j]))
         .sum();
 
     (total_cost, trimmed_row, trimmed_col)

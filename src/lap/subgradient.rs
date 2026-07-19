@@ -1,10 +1,10 @@
-use crate::types::{LapSolution, UNASSIGNED};
+use crate::types::LapSolution;
 use crate::utils::sap_solve;
 
 /// Solves the LAP using subgradient dual optimization followed by SAP primal recovery.
 ///
 /// Phase 1 runs subgradient iterations to improve the Lagrangian dual bound —
-/// dual variables u[i] and v[j] are updated so that `u[i] + v[j] ≤ cost[i][j]`
+/// dual variables u[i] and v[j] are updated so that `u[i] + v[j] <= cost[i][j]`
 /// approaches tightness at the optimum.  Phase 2 then runs the O(n³) SAP algorithm
 /// (initialized from scratch) to produce a guaranteed-optimal feasible assignment.
 /// The subgradient phase acts as a warm-up that can detect early termination when a
@@ -16,7 +16,15 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
     }
     let m = matrix[0].len();
     if n != m {
-        return (0.0, vec![], vec![]);
+        return sap_solve(&crate::utils::pad_to_square(
+            &matrix,
+            matrix
+                .iter()
+                .flatten()
+                .cloned()
+                .fold(f64::NEG_INFINITY, f64::max)
+                + 1.0,
+        ));
     }
 
     // Phase 1: Subgradient dual optimization.
@@ -29,7 +37,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
         // Lagrangian subproblem: for each row pick the column minimizing reduced cost.
         // Use a greedy feasibility check (columns consumed in row order).
         let mut col_used = vec![false; n];
-        let mut col_of_row = vec![UNASSIGNED; n];
+        let mut col_of_row = vec![None; n];
 
         for i in 0..n {
             let best = (0..n).filter(|&j| !col_used[j]).min_by(|&j1, &j2| {
@@ -38,7 +46,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
             if let Some(j) = best {
-                col_of_row[i] = j;
+                col_of_row[i] = Some(j);
                 col_used[j] = true;
             }
         }
@@ -47,11 +55,7 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
         let mut sg_u = vec![0.0f64; n];
         let mut sg_v = vec![0.0f64; n];
         for i in 0..n {
-            sg_u[i] = if col_of_row[i] == UNASSIGNED {
-                1.0
-            } else {
-                -1.0
-            };
+            sg_u[i] = if col_of_row[i].is_none() { 1.0 } else { -1.0 };
         }
         for j in 0..n {
             sg_v[j] = if col_used[j] { -1.0 } else { 1.0 };
@@ -74,12 +78,5 @@ pub fn solve(matrix: Vec<Vec<f64>>) -> LapSolution {
     }
 
     // Phase 2: SAP primal recovery — guarantees the globally optimal feasible solution.
-    let (_, row_assign, col_assign) = sap_solve(&matrix);
-
-    let total_cost: f64 = (0..n)
-        .filter(|&i| row_assign[i] != UNASSIGNED)
-        .map(|i| matrix[i][row_assign[i]])
-        .sum();
-
-    (total_cost, row_assign, col_assign)
+    sap_solve(&matrix)
 }

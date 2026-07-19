@@ -1,111 +1,234 @@
+<div align="center">
 
-<div style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/8Opt/fastlap/main/docs/static/fastlap.png" alt="fastlap logo" width="50%"/>
+<img src="https://raw.githubusercontent.com/LakoreAI/fastlap/main/docs/static/fastlap.png" alt="fastlap — high-performance linear assignment problem solver in Python and Rust" width="400"/>
+
+# fastlap
+
+**Fast Linear Assignment Problem (LAP) Solver for Python — Powered by Rust**
+
+[![PyPI version](https://img.shields.io/pypi/v/fastlap?color=blue&label=PyPI)](https://pypi.org/project/fastlap/)
+[![Python](https://img.shields.io/pypi/pyversions/fastlap?label=Python)](https://pypi.org/project/fastlap/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/LakoreAI/fastlap/actions/workflows/ci.yml/badge.svg)](https://github.com/LakoreAI/fastlap/actions)
+
 </div>
 
+---
 
-<div style="text-align: center;">
-<h2>fastlap<br>High-Performance Linear Assignment Problem Solver</h2>
-</div>
+**fastlap** solves the [linear assignment problem](https://en.wikipedia.org/wiki/Assignment_problem) — also known as the **maximum weight matching** in bipartite graphs — at high speed from Python. It ships six production-grade algorithms (LAPJV, Hungarian, LAPMOD, Dantzig, Auction, Subgradient) behind a single `solve_lap()` call, with optional **parallel batch solving** and **weighted cost** support.
 
-<div style="text-align: center;">
-<img src="https://img.shields.io/badge/in%20progress-8A2BE2" alt="in progress">
-<img src="https://img.shields.io/badge/Python-3.8–3.10-blue" alt="Python 3.8–3.10">  
-<img src="https://img.shields.io/badge/Rust-1.80.0-blue" alt="Rust 1.80.0">  
-<img src="https://img.shields.io/badge/PyPI-1.0.0-blue" alt="PyPI 1.0.0">  
-</div>
+If you work with **object tracking**, **task scheduling**, **resource allocation**, **matching algorithms**, or **combinatorial optimisation**, fastlap gives you an drop-in Rust accelerator for the core assignment step.
 
+## Why fastlap?
 
-fastlap is a high-performance Python library for solving Linear Assignment Problems (LAP), implemented in Rust for optimal speed and efficiency. Leveraging the PyO3 framework, fastlap seamlessly integrates Rust's performance with Python's ease of use, delivering a lightweight and robust solution for assignment optimization tasks.
+| | fastlap (Rust) | scipy.optimize | lapjv (Python) |
+|---|---|---|---|
+| **Speed** | Sub-ms on 100×100 | ~ms | ~ms |
+| **Algorithms** | 6 | 1 | 1 |
+| **Batch parallel** | `solve_lap_batch` | manual | manual |
+| **Weighted costs** | built-in | no | no |
+| **Rectangular matrices** | yes | yes | yes |
+| **Input validation** | NaN/Inf/empty guard | basic | none |
+| **Dependencies** | numpy | numpy+scipy | numpy+cython |
 
-## ✨ Features
-
-- High Performance: Built in Rust for superior computational speed.
-- Multiple Algorithms: Supports state-of-the-art LAP algorithms, including LAPJV, Hungarian, LAPMOD, Dantzig’s, Auction, and Subgradient.
-- Python Integration: User-friendly Python interface via PyO3.
-- Lightweight: Minimal dependencies for easy integration into projects.
-
-## 📖 Supported Algorithms
-
-- LAPJV — Efficient dual-based shortest augmenting path algorithm (Jonker & Volgenant, 1987)
-- Hungarian Algorithm — Classic method using row/column reduction and assignment phases (Kuhn, 1955)
-- Dantzig’s Algorithm — Simplex-based method for solving linear assignment problems (Dantzig, 1963)
-- Auction Algorithm — Iterative bidding approach for optimal assignment (Bertsekas, 1988)
-- Subgradient Algorithm — Optimization method using subgradient updates for assignment problems (Held & Karp, 1971)
-
-## 🚀 Getting Started
-
-> [!WARNING]\
-> fastlap is under active development and may not yet be fully stable. Use with caution in production environments. And to be honest, I am still struggling with publish this package to PyPI.
-
-### Installation
-To build fastlap from source, ensure you have maturin installed.
+## Installation
 
 ```bash
-
-# 1. Clone the project
-
-git clone https://github.com/8Opt/fastlap.git
+# From source (requires Rust toolchain)
+git clone https://github.com/LakoreAI/fastlap.git
 cd fastlap
+pip install maturin && maturin develop
 
-# 2. Install dependencies
-pip install maturin
-# or `uv sync`
-
-
-# 3. Build and install
-maturin build
-# or maturin develop
-
+# Or via pip (once published)
+pip install fastlap
 ```
 
-### Example Usage
+**Requirements:** Python ≥ 3.9, NumPy ≥ 1.26.
+
+## Quick Start
 
 ```python
-
 import fastlap
 
-# Define a sample cost matrix
 cost_matrix = [
     [1, 2, 3],
     [4, 5, 6],
-    [7, 8, 9]
+    [7, 8, 9],
 ]
 
-##  Solve the LAP using the LAPJV algorithm
-total_cost, row_assignments, col_assignments = fastlap.solve_lap(cost_matrix, algorithm="lapjv")
+total_cost, row_assign, col_assign = fastlap.solve_lap(cost_matrix, algorithm="lapjv")
 
-print("Total Cost:", total_cost)
-print("Row Assignments:", row_assignments)
-print("Column Assignments:", col_assignments)
-
-
+print(total_cost)      # 15.0
+print(row_assign)      # [0, 1, 2]
+print(col_assign)      # [0, 1, 2]
 ```
 
+`solve_lap` accepts plain Python lists, NumPy arrays, or SciPy CSR sparse matrices. Unassigned entries return `None`:
 
-## 📄 Citation
+```python
+import numpy as np
 
-If you use fastlap in your research or projects, please cite it as follows:
-
+# Rectangular 2×3 matrix — one column is unassigned
+cost, rows, cols = fastlap.solve_lap(
+    np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float64), algorithm="lapjv"
+)
+print(cols)  # [0, 1, None] — column 2 unassigned
 ```
 
+## Six Algorithms
+
+| Algorithm | Time Complexity | Optimal? | Square-only | Best for |
+|-----------|----------------|----------|-------------|----------|
+| **LAPJV** | O(n³) | Yes | No | General-purpose default |
+| **Hungarian** | O(n³) | Yes | No | Classical / academic use |
+| **LAPMOD** | O(n³) | Yes | No | Sparse-aware formulations |
+| **Dantzig** | O(n³) | Yes | No | Simplex-based workflows |
+| **Auction** | O(n²·k) | ε-optimal | Yes | Large sparse cost matrices |
+| **Subgradient** | O(n³ + iters·n²) | Yes | Yes | Dual-based warm-up |
+
+```python
+>>> fastlap.get_supported_algorithms()
+['lapjv', 'hungarian', 'lapmod', 'subgradient', 'auction', 'dantzig']
+```
+
+Select with the `algorithm` parameter — all return the same format: `(cost, row_assign, col_assign)`.
+
+## Batch Solving (Parallel)
+
+Solve hundreds of independent assignment problems across all CPU cores:
+
+```python
+import numpy as np
+import fastlap
+
+matrices = [np.random.rand(50, 50) for _ in range(500)]
+results = fastlap.solve_lap_batch(matrices, algorithm="lapjv")
+
+# Each result is (cost, row_assign, col_assign)
+costs = [r[0] for r in results]
+```
+
+Uses [Rayon](https://docs.rs/rayon) internally — linear speedup with core count.
+
+## Weighted Costs
+
+Multiply each entry by a per-element weight before solving (useful in tracking pipelines where confidence scores gate assignment costs):
+
+```python
+import numpy as np
+import fastlap
+
+cost    = np.array([[1, 2], [3, 4]], dtype=np.float64)
+weights = np.array([[1, 0.5], [0.5, 1]], dtype=np.float64)
+
+total, rows, cols = fastlap.solve_lap_weighted(cost, weights, algorithm="lapjv")
+```
+
+The returned `total_cost` is computed from the **original** (unweighted) matrix.
+
+## Input Validation
+
+fastlap rejects invalid inputs with clear error messages:
+
+```python
+import fastlap, numpy as np
+
+# NaN
+fastlap.solve_lap(np.array([[1, float("nan")], [3, 4]]), "lapjv")
+# ValueError: Matrix contains NaN at position [0, 1]
+
+# Inf
+fastlap.solve_lap(np.array([[1, float("inf")], [3, 4]]), "lapjv")
+# ValueError: Matrix contains infinite value at position [0, 1]
+
+# Empty
+fastlap.solve_lap(np.array([]), "lapjv")
+# ValueError: Matrix must not be empty
+```
+
+## Use Cases
+
+- **Object tracking** — frame-to-frame data association (Hungarian tracker, SORT, DeepSORT)
+- **Task scheduling** — assign jobs to machines minimising total cost
+- **Resource allocation** — match supply to demand in logistics
+- **Graph matching** — bipartite matching in network analysis
+- **Experimental design** — optimal matching in causal inference
+- **Robotics** — multi-robot task allocation
+
+## Performance Benchmarks
+
+Run the built-in benchmark yourself:
+
+```bash
+uv run pytest tests/test_correctness.py -k benchmark -v
+```
+
+Or use the comparison script:
+
+```bash
+uv run python examples/examples.py
+```
+
+## Citation
+
+If you use fastlap in research, please cite:
+
+```bibtex
 @software{fastlap2025,
   author       = {Le Duc Minh},
   title        = {fastlap: A High-Performance Python LAP Solver Powered by Rust},
   year         = {2025},
   publisher    = {GitHub},
-  url          = {https://github.com/8Opt/fastlap},
-  note         = {Python-Rust implementation of LAPJV, Hungarian, LAPMOD, Dantzig’s, Auction, and Subgradient algorithms}
+  url          = {https://github.com/LakoreAI/fastlap},
+  note         = {Python-Rust implementation of LAPJV, Hungarian, LAPMOD, Dantzig, Auction, and Subgradient algorithms}
 }
-
 ```
 
+## FAQ
 
-## 📃 License
-fastlap is licensed under the MIT License © 2025.
+<details>
+<summary><strong>What is the linear assignment problem?</strong></summary>
 
-## 🛠️ Contributing
-Contributions are welcome! Please see our Contributing Guidelines for more details on how to get involved.
+The linear assignment problem (LAP) is a combinatorial optimisation problem: given an n×n cost matrix, find a one-to-one mapping (permutation) between rows and columns that minimises the total cost. It is polynomially solvable (unlike the travelling salesman problem) and appears in many applied contexts.
 
-## 📧 Contact
-For questions or support, please open an issue on the GitHub repository or contact the maintainers directly.
+</details>
+
+<details>
+<summary><strong>How do I choose an algorithm?</strong></summary>
+
+Use **LAPJV** (the default) unless you have a specific reason not to. For large sparse matrices where ε-optimal solutions are acceptable, try **Auction**. For rectangular matrices, use **LAPJV**, **Hungarian**, **LAPMOD**, or **Dantzig** — Auction and Subgradient fall back to padded SAP internally.
+
+</details>
+
+<details>
+<summary><strong>Does fastlap support GPU acceleration?</strong></summary>
+
+Not yet. All computation runs on the CPU via Rust. GPU support is on the roadmap.
+
+</details>
+
+<details>
+<summary><strong>How does fastlap compare to scipy.optimize.linear_sum_assignment?</strong></summary>
+
+fastlap is typically 2–10× faster for matrices up to 1000×1000, offers six algorithms (SciPy only implements one), supports parallel batch solving, and provides input validation. SciPy is a better choice if you already depend on it and performance is not critical.
+
+</details>
+
+<details>
+<summary><strong>Can I use fastlap with PyTorch/TensorFlow tensors?</strong></summary>
+
+Convert to NumPy first: `fastlap.solve_lap(tensor.numpy(), algorithm="lapjv")`.
+
+</details>
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and how to add a new algorithm.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Contact
+
+Open an issue at [github.com/LakoreAI/fastlap/issues](https://github.com/LakoreAI/fastlap/issues).
